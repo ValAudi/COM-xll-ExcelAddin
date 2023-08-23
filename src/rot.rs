@@ -9,7 +9,7 @@ pub fn ole_active_object() -> Result<IDispatch> {
 
     let punknw: *mut Option<IUnknown> = Box::into_raw(Box::new(unsafe { std::mem::zeroed() }));
     let raw_ptr: *mut c_void = ptr::null_mut();
-    let active_object_punknw = unsafe { GetActiveObject(&EXCEL_APP, raw_ptr, punknw) };
+    let active_object_punknw = unsafe { GetActiveObject(&EXCEL_APP, Some(raw_ptr), punknw) };
     if active_object_punknw.is_ok() {
         let active_object_interface: IUnknown = unsafe { Box::from_raw(punknw).unwrap() };
         let excel_dispatch: IDispatch = active_object_interface.cast()?;

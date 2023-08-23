@@ -8,6 +8,44 @@ pub mod excel_automation {
     use crate::range;
     use crate::data;
 
+    pub fn set_range_values() -> Result<()>
+    {
+        // Initialize a COM 
+        unsafe { 
+            CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
+        }?;
+
+        let excel_dispatch = rot::ole_active_object()?;
+        let workbook_dispacth = dispatch::get_dispatch_interface(excel_dispatch, workbook::ACTIVE_WORKBOOK_ID)?;
+        let worksheet_dispatch = dispatch::get_dispatch_interface(workbook_dispacth, worksheet::ACTIVE_WORKSHEET_ID)?;
+        let range_dispatch = dispatch::get_range_interface(worksheet_dispatch, range::CELL_RANGE_ID)?;
+        let var = range::set_range_data();
+        let _result = range::set_range_array(range_dispatch, range::RANGE_VALUES_ID, var)?;
+        unsafe {
+            CoUninitialize()
+        };
+        Ok(())
+    } 
+
+    pub fn retrieve_range_values() -> Result<()>
+    {
+        // Initialize a COM 
+        unsafe { 
+            CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
+        }?;
+
+        let excel_dispatch = rot::ole_active_object()?;
+        let workbook_dispacth = dispatch::get_dispatch_interface(excel_dispatch, workbook::ACTIVE_WORKBOOK_ID)?;
+        let worksheet_dispatch = dispatch::get_dispatch_interface(workbook_dispacth, worksheet::ACTIVE_WORKSHEET_ID)?;
+        let range_dispatch = dispatch::get_range_interface(worksheet_dispatch, range::CELL_RANGE_ID)?;
+        let array_data = range::get_range_array(range_dispatch, range::RANGE_VALUES_ID)?;
+        range::get_range_data(array_data);
+        unsafe {
+            CoUninitialize()
+        };
+        Ok(())
+    } 
+
     pub fn retrieve_worksheet_name() -> Result<()>
     {
         // Initialize a COM 

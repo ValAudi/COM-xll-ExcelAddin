@@ -1,6 +1,5 @@
-use std::slice;
-use windows::{Win32::System::{Com::*, Ole::*}, core::*};
-use crate::variant::init_variant;
+use windows::{Win32::System::{Com::*, Variant::VARIANT}, core::*};
+use crate::variant::init_str_variant;
 
 pub const CELL_VALUES_ID: i32 = 6; // Get value of cells
 const NULL: GUID = GUID::from_values(0x00000000, 0x0000, 0x0000, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
@@ -16,7 +15,7 @@ pub fn get_cell_data(dispatch_interface: IDispatch, dispid: i32) -> Result<()> {
     
     let method_results = unsafe { 
         dispatch_interface.Invoke 
-        ( 
+        (  
             dispid, 
             &NULL,
             0,
@@ -43,22 +42,6 @@ pub fn get_cell_data(dispatch_interface: IDispatch, dispid: i32) -> Result<()> {
     }
 }
 
-pub fn get_range_data(array: *mut SAFEARRAY) {
-
-    // Get range data from safe array
-    let const_array = array.cast_const();
-    let range_data = unsafe { SafeArrayLock(const_array) };
-    if range_data.is_ok() {
-        let ptr_data = unsafe { *const_array }.pvData as *mut VARIANT;
-        let full_data = unsafe { slice::from_raw_parts_mut(ptr_data, 2) }; 
-        // println!("{:#?}", unsafe { (full_data[9]).Anonymous.Anonymous.Anonymous.bstrVal.clone()}.to_string() );
-        println!("{:#?}", unsafe { (full_data[1]).Anonymous.Anonymous.Anonymous.bstrVal.clone()}.to_string() );
-    } else {
-        let error_message: Error = range_data.unwrap_err();
-        println!("{}", error_message.to_string());
-    }
-}  
-
 pub fn set_cell_value(dispatch_interface: IDispatch, dispid: i32) -> Result<()> {            
         
     // preliminary variables for IDispacth interface initialization 
@@ -67,12 +50,15 @@ pub fn set_cell_value(dispatch_interface: IDispatch, dispid: i32) -> Result<()> 
     let exception_info: *mut EXCEPINFO = Box::into_raw(Box::new(EXCEPINFO::default()));
     let result_variant: *mut VARIANT = Box::into_raw(Box::new(VARIANT::default()));
     
-    let variant1 = init_variant(None,  8, BSTR::from("Changed"));
+    let variant1 = init_str_variant(None,  8, BSTR::from("Changed Again"));
     let mut rgargs: [VARIANT;1] = [variant1];
     let prgars = rgargs.as_mut_ptr();
+    let named_param = Box::into_raw(Box::new(-3 as i32));
     let mut params = DISPPARAMS::default();
     params.rgvarg = prgars;
+    params.rgdispidNamedArgs = named_param;
     params.cArgs = 1;
+    params.cNamedArgs = 1;
     let args: *const DISPPARAMS = Box::into_raw(Box::new(params));
     
     let method_results = unsafe { 
@@ -95,7 +81,7 @@ pub fn set_cell_value(dispatch_interface: IDispatch, dispid: i32) -> Result<()> 
         // let value_array = unsafe { result_box.Anonymous.Anonymous.Anonymous.bstrVal.clone()}.to_string(); 
         return Ok(());
     } else {
-        println!("Got here!");
+        println!("{:#?}", unsafe {Box::from_raw(exception_info)} );
         let error_message: Error = method_results.unwrap_err();
         return Err(error_message);
     }

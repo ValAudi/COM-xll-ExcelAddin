@@ -1,11 +1,9 @@
-use windows::{Win32::System::Com::*, core::*};
+use windows::{Win32::System::{Com::*, Variant::VARIANT}, core::*};
 
 pub const ACTIVE_WORKBOOK_ID: i32 = 308; // Method to get an active workbook interface
 const NULL: GUID = GUID::from_values(0x00000000, 0x0000, 0x0000, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
-
 // Refine This method
-
 
 pub fn get_sheetname(dispatch_interface: IDispatch, dispid: i32) -> Result<String> {            
         

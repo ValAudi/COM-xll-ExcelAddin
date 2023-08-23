@@ -9,6 +9,16 @@ pub mod worksheet;
 pub mod range;
 pub mod data;
 
+#[no_mangle]
+#[allow(non_snake_case, unused_variables)]
+extern "system" fn xlAutoOpen() {
+    // Function implementation goes here
+    // You can return an integer as in the original signature.
+    // If this function is a placeholder, you can just return 0.\
+
+    let _r = set_sheetname();
+}
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
@@ -33,6 +43,16 @@ pub fn retrieve() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+pub fn retrieve_array() -> Result<(), Box<dyn Error>> {
+    let _t = automation::excel_automation::retrieve_range_values()?;
+    Ok(())
+}
+
+pub fn set_values_array() -> Result<(), Box<dyn Error>> {
+    let _t = automation::excel_automation::set_range_values()?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -42,6 +62,20 @@ mod tests {
     fn it_works() {
         let result = add(2, 2);
         assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn test_com_set_array_values() -> Result<(), Box<dyn Error>> {
+        let result = set_values_array()?;
+        assert_eq!(result, ());
+        Ok(())
+    }
+
+    #[test]
+    fn test_com_get_array_values() -> Result<(), Box<dyn Error>> {
+        let result = retrieve_array()?;
+        assert_eq!(result, ());
+        Ok(())
     }
 
     #[test]

@@ -1,5 +1,5 @@
-use windows::{Win32::System::Com::*, core::*};
-use crate::variant::init_variant;
+use windows::{Win32::System::{Com::*, Variant::VARIANT}, core::*};
+use crate::variant::init_str_variant;
 
 const NULL: GUID = GUID::from_values(0x00000000, 0x0000, 0x0000, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
@@ -43,8 +43,8 @@ pub fn get_range_interface(dispatch_interface: IDispatch, dispid: i32) -> Result
     let error_code: *mut u32 = Box::into_raw(Box::new(0 as u32));
     let exception_info: *mut EXCEPINFO = Box::into_raw(Box::new(EXCEPINFO::default()));
     let result_variant: *mut VARIANT = Box::into_raw(Box::new(VARIANT::default()));
-    let variant1 = init_variant(None,  8, BSTR::from("A2"));
-    let variant2 = init_variant(None, 8, BSTR::from("A2"));
+    let variant1 = init_str_variant(None,  8, BSTR::from("A1"));
+    let variant2 = init_str_variant(None, 8, BSTR::from("B2"));
     let mut rgargs: [VARIANT;2] = [variant1, variant2];
     let prgars: *mut VARIANT = rgargs.as_mut_ptr();
     let mut params = DISPPARAMS::default();

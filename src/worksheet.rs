@@ -1,6 +1,6 @@
-use windows::{Win32::System::Com::*, core::*};
+use windows::{Win32::System::{Com::*, Variant::{VARIANT, VARENUM}}, core::*};
 
-use crate::variant::init_variant;
+use crate::variant::init_str_variant;
 
 pub const ACTIVE_WORKSHEET_ID: i32 = 307; // Method to get an interface to active worksheet  
 pub const ACTIVE_WORKSHEET_NAME_ID: i32 = 110; // Method to get an interface to active worksheet 
@@ -47,11 +47,10 @@ pub fn set_sheetname(dispatch_interface: IDispatch, dispid: i32) -> Result<()> {
     let result_variant: *mut VARIANT = Box::into_raw(Box::new(VARIANT::default()));
 
     
-    let name_str = init_variant(None,  8, BSTR::from("Person vAdditionalContactInfoTest"));
-    let _opt_param = init_variant(None,  10,  BSTR::from("DISP_E_PARAMNOTFOUND"));
+    let name_str = init_str_variant(None,  8, BSTR::from("Sheet 6"));
     let mut rgargs: [VARIANT;1] = [name_str];
     let prgars = rgargs.as_mut_ptr();
-    let named_param = Box::into_raw(Box::new(1 as i32));
+    let named_param = Box::into_raw(Box::new(-3 as i32));
     let mut params = DISPPARAMS::default();
     params.rgvarg = prgars;
     params.rgdispidNamedArgs = named_param;
@@ -78,6 +77,7 @@ pub fn set_sheetname(dispatch_interface: IDispatch, dispid: i32) -> Result<()> {
         println!("{:#?}", dt);
         return Ok(());
     } else {
+        println!("{:#?}", unsafe {Box::from_raw(exception_info)} );
         let error_message: Error = method_results.unwrap_err();
         return Err(error_message);
     }
