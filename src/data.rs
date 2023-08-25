@@ -1,5 +1,5 @@
-use windows::{Win32::System::{Com::*, Variant::VARIANT}, core::*};
-use crate::variant::init_str_variant;
+use windows::{Win32::System::{Com::*, Variant::*}, core::*};
+use crate::variant::*;
 
 pub const CELL_VALUES_ID: i32 = 6; // Get value of cells
 const NULL: GUID = GUID::from_values(0x00000000, 0x0000, 0x0000, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
@@ -50,7 +50,7 @@ pub fn set_cell_value(dispatch_interface: IDispatch, dispid: i32) -> Result<()> 
     let exception_info: *mut EXCEPINFO = Box::into_raw(Box::new(EXCEPINFO::default()));
     let result_variant: *mut VARIANT = Box::into_raw(Box::new(VARIANT::default()));
     
-    let variant1 = init_str_variant(None,  8, BSTR::from("Changed Again"));
+    let variant1 = variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed Again")));
     let mut rgargs: [VARIANT;1] = [variant1];
     let prgars = rgargs.as_mut_ptr();
     let named_param = Box::into_raw(Box::new(-3 as i32));

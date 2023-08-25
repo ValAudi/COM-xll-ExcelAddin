@@ -1,5 +1,8 @@
 use std::error::Error;
 
+use windows::Win32::System::Variant::*;
+use crate::variant::*;
+
 pub mod automation;
 pub mod rot;
 pub mod workbook;
@@ -8,6 +11,7 @@ pub mod variant;
 pub mod worksheet;
 pub mod range;
 pub mod data;
+
 
 #[no_mangle]
 #[allow(non_snake_case, unused_variables)]
@@ -21,6 +25,12 @@ extern "system" fn xlAutoOpen() {
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
+}
+
+pub fn test_variant() {
+    let t = variant_initialize(None, VT_I2, VariantType::VT_I2(2));
+    println!("{:#?}", unsafe { t.Anonymous.Anonymous.vt } );
+    println!("{:#?}", unsafe { t.Anonymous.Anonymous.Anonymous.iVal} );
 }
 
 pub fn get_sheetname() -> Result<(), Box<dyn Error>> {
@@ -62,6 +72,11 @@ mod tests {
     fn it_works() {
         let result = add(2, 2);
         assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn works() {
+        test_variant();   
     }
 
     #[test]

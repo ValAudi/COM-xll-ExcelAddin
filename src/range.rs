@@ -1,6 +1,6 @@
 use std::{slice, ffi::c_void};
 use windows::{Win32::System::{Com::*, Ole::*, Variant::*}, core::*};
-use crate::variant::{init_str_variant, init_array_variant};
+use crate::variant::*;
 
 pub const CELL_RANGE_ID: i32 = 197; // Get cells within a certain range
 pub const RANGE_VALUES_ID: i32 = 6; // Get value of cells
@@ -58,7 +58,7 @@ pub fn get_range_data(array: *mut SAFEARRAY) {
 
 pub fn set_range_data() -> VARIANT {
 
-    let variant1 = init_str_variant(None,  8, BSTR::from("Changed"));
+    let variant1 = variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed")));
 
     // Creating a safe array Bound
     let mut sab: SAFEARRAYBOUND = SAFEARRAYBOUND::default();
@@ -100,7 +100,7 @@ pub fn set_range_data() -> VARIANT {
     }
 
     // Build a variant from the safe-array
-    let var_safe_array = init_array_variant(None, 8204, safe_array);
+    let var_safe_array = variant_initialize(None, VARENUM(8204), VariantType::VT_ARRAY(safe_array));
     var_safe_array
 }  
 
