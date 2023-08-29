@@ -58,7 +58,7 @@ pub fn get_range_data(array: *mut SAFEARRAY) {
 
 pub fn set_range_data() -> VARIANT {
 
-    let variant1 = variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed")));
+    let _variant1 = variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed")));
 
     // Creating a safe array Bound
     let mut sab: SAFEARRAYBOUND = SAFEARRAYBOUND::default();
@@ -75,36 +75,85 @@ pub fn set_range_data() -> VARIANT {
 
     // Creating a safearray using the OLE method SafeArrayCreate
     let safe_array = unsafe { SafeArrayCreate(VARENUM(12), 2, rgsabound) };
-    println!("{:#?}", unsafe {*safe_array}); 
     
-    let index: [i32; 2] = [0, 0];
-    let rgindices = index.as_ptr();
-    let res = unsafe {SafeArrayPutElement(safe_array, rgindices, Box::into_raw(Box::new(variant1)) as *const c_void)};
-    if res.is_ok() {
-        println!("{:#?}", safe_array);
-    } else {
-        let error_message: Error = res.unwrap_err();
-        println!("{}", error_message.to_string());
-    } 
-    println!("{:#?}", unsafe {*safe_array}); 
+    // Single Element Insert
+    // let index: [i32; 2] = [0, 0];
+    // let rgindices = index.as_ptr();
+    // let res = unsafe {SafeArrayPutElement(safe_array, rgindices, Box::into_raw(Box::new(variant1)) as *const c_void)};
+    // if res.is_ok() {
+    //     println!("{:#?}", safe_array);
+    // } else {
+    //     let error_message: Error = res.unwrap_err();
+    //     println!("{}", error_message.to_string());
+    // } 
 
-    let pointer: *mut *mut c_void = std::ptr::null_mut();
-    let safearray: *const SAFEARRAY = safe_array.cast_const();
+    // Multi-element insert
+    let mut empty_variant: VARIANT = unsafe {std::mem::zeroed()};
+    let pointer: *mut *mut c_void = &mut empty_variant as *mut _ as *mut *mut c_void;
+    let safearray: *mut SAFEARRAY = safe_array;
     let r = unsafe { SafeArrayAccessData(safearray, pointer)};
     if r.is_ok() {
-        let t = unsafe {*pointer} as *mut VARIANT;
-        println!("{:#?}", unsafe{(*t).Anonymous.Anonymous.vt});
+        let mut vec_variant: Vec<VARIANT> = Vec::new();
+        vec_variant.push(variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed2"))));
+        vec_variant.push(variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed3"))));
+        vec_variant.push(variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed4"))));
+        vec_variant.push(variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("Changed5"))));
+
+        unsafe {
+            for i in 0..vec_variant.len() {
+                let curr_variant = vec_variant[i].clone();
+                *pointer.offset(i  as isize) =  Box::into_raw(Box::new(curr_variant)) as *mut _ as *mut c_void;             
+            }          
+        }
+        let t = unsafe {std::ptr::read(*pointer.offset(2) as *mut VARIANT)};
+        println!("{:#?}", unsafe{t.Anonymous.Anonymous.Anonymous.bstrVal.clone()});
+        let s = unsafe {SafeArrayUnaccessData(safearray)};
+        if s.is_ok() {
+            // println!("Unacess data");
+        } else {
+            println!("Entered Error block");
+            let error_message: Error = s.unwrap_err();
+            println!("{}", error_message.to_string());
+        }
     } else {
         let error_message: Error = r.unwrap_err();
         println!("{}", error_message.to_string());
     }
+    println!("Got here!!!!");
+    println!("--------------------------------------------------------------");
 
-    // Build a variant from the safe-array
-    let var_safe_array = variant_initialize(None, VARENUM(8204), VariantType::VT_ARRAY(safe_array));
-    var_safe_array
+
+    // Build a variant from the single element insert safe_array and return
+    // let var_safe_array = variant_initialize(None, VARENUM(8204), VariantType::VT_ARRAY(safe_array));
+    // var_safe_array
+
+    // Build an element from a multi-element insert safearray and return
+    let var_safearray = variant_initialize(None, VARENUM(8204), VariantType::VT_ARRAY(safearray));
+    // println!("{:#?}", unsafe {var_safearray.Anonymous.Anonymous.vt});
+    // println!("{:#?}", unsafe {var_safearray.Anonymous.Anonymous.Anonymous.parray});
+    println!("--------------------------------------------------------------");
+    let variant_safearray = unsafe {var_safearray.Anonymous.Anonymous.Anonymous.parray};
+    let const_array = variant_safearray.cast_const();
+    let range_data = unsafe { SafeArrayLock(const_array) };
+    if range_data.is_ok() {
+        println!("{:#?}", unsafe {*const_array}.cDims);
+        println!("{:#?}", unsafe {*const_array}.cLocks);
+        println!("{:#?}", unsafe {*const_array}.cbElements);
+        println!("{:#?}", unsafe {*const_array}.fFeatures);
+        let ptr_data = unsafe { *const_array }.pvData as *mut VARIANT;
+        let full_data = unsafe { slice::from_raw_parts_mut(ptr_data, 4) }; 
+        for i in 0..4 {
+            println!("{:#?}", unsafe { (full_data[i]).Anonymous.Anonymous.Anonymous.bstrVal.clone()}.to_string() );
+        }
+    } else {
+        println!("Came here!");
+        let error_message: Error = range_data.unwrap_err();
+        println!("{}", error_message.to_string());
+    }
+    var_safearray
 }  
 
-pub fn set_range_array(dispatch_interface: IDispatch, dispid: i32, variant:VARIANT) -> Result<()> {            
+pub fn set_range_array(dispatch_interface: IDispatch, dispid: i32, variant:VARIANT) -> Result<()> {           
         
     // preliminary variables for IDispacth interface initialization 
 
@@ -143,4 +192,5 @@ pub fn set_range_array(dispatch_interface: IDispatch, dispid: i32, variant:VARIA
         let error_message: Error = method_results.unwrap_err();
         return Err(error_message);
     }
+
 }

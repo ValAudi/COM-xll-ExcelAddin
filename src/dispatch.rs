@@ -43,8 +43,8 @@ pub fn get_range_interface(dispatch_interface: IDispatch, dispid: i32) -> Result
     let error_code: *mut u32 = Box::into_raw(Box::new(0 as u32));
     let exception_info: *mut EXCEPINFO = Box::into_raw(Box::new(EXCEPINFO::default()));
     let result_variant: *mut VARIANT = Box::into_raw(Box::new(VARIANT::default()));
-    let variant1 = variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("A1")));
-    let variant2 = variant_initialize(None, VT_BSTR, VariantType::VT_BSTR(BSTR::from("B2")));
+    let variant1 = variant_initialize(None,  VT_BSTR, VariantType::VT_BSTR(BSTR::from("D2")));
+    let variant2 = variant_initialize(None, VT_BSTR, VariantType::VT_BSTR(BSTR::from("E3")));
     let mut rgargs: [VARIANT;2] = [variant1, variant2];
     let prgars: *mut VARIANT = rgargs.as_mut_ptr();
     let mut params = DISPPARAMS::default();
