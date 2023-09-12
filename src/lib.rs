@@ -11,6 +11,7 @@ pub mod variant;
 pub mod worksheet;
 pub mod range;
 pub mod data;
+pub mod ribbon;
 
 
 #[no_mangle]
@@ -25,6 +26,11 @@ extern "system" fn xlAutoOpen() {
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
+}
+
+pub fn test_ribbon() -> Result<(), Box<dyn Error>> {
+    let _t = automation::excel_automation::modify_ui_ribbon()?;
+    Ok(())
 }
 
 pub fn test_variant() {
@@ -73,6 +79,13 @@ mod tests {
         let result = add(2, 2);
         assert_eq!(result, 4);
     }
+
+    #[test]
+    fn ribbon_test()  -> Result<(), Box<dyn Error>> {
+        let ts = test_ribbon()?;   
+        Ok(())
+    }
+
 
     #[test]
     fn works() {

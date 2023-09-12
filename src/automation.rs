@@ -7,6 +7,22 @@ pub mod excel_automation {
     use crate::worksheet;
     use crate::range;
     use crate::data;
+    use crate::ribbon;
+
+    pub fn modify_ui_ribbon() -> Result<()>
+    {
+        // Initialize a COM 
+        unsafe { 
+            CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
+        }?;
+
+        let _res = ribbon::load_customized_ribbon()?;
+
+        unsafe {
+            CoUninitialize()
+        };
+        Ok(())
+    } 
 
     pub fn set_range_values() -> Result<()>
     {

@@ -1,0 +1,35 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui"> 
+  <ribbon startFromScratch="false"> 
+    <tabs> 
+      <tab id="CustomTab" label="National Accounts"> 
+        <group id="standards" label="Classification"> 
+          <button id="HSCoding" imageMso="HappyFace" size="medium" 
+                label="HS Coding" 
+                screentip="Map to Harmonized System Coding" 
+                onAction="hs_coding"
+            /> 
+            <button id="BECCoding" imageMso="HappyFace" size="medium" 
+                label="BEC Coding" 
+                screentip="Map to Broad Economic Category System Coding" 
+                onAction="bec_coding"
+            /> 
+            <button id="CPCCoding" imageMso="HappyFace" size="medium" 
+                label="CPC Coding" 
+                screentip="Map to Broad Economic Category System Coding" 
+                onAction="cpc_coding"
+            /> 
+            <button id="SITCCoding" imageMso="HappyFace" size="medium" 
+                label="SITC Coding" 
+                screentip="Map to Broad Economic Category System Coding" 
+                onAction="sitc_coding"
+            /> 
+            <button id="ISICCoding" imageMso="HappyFace" size="medium" 
+                label="ISIC Coding" 
+                screentip="Map to Broad Economic Category System Coding" 
+                onAction="isic_coding"
+            /> 
+        </group> 
+      </tab> 
+    </tabs> 
+  </ribbon> 
+</customUI> 
