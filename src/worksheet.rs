@@ -6,7 +6,7 @@ pub const ACTIVE_WORKSHEET_ID: i32 = 307; // Method to get an interface to activ
 pub const ACTIVE_WORKSHEET_NAME_ID: i32 = 110; // Method to get an interface to active worksheet 
 const NULL: GUID = GUID::from_values(0x00000000, 0x0000, 0x0000, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
-pub fn get_sheetname(dispatch_interface: IDispatch, dispid: i32) -> Result<String> {            
+pub fn get_sheetname(dispatch_interface: &IDispatch, dispid: i32) -> Result<String> {            
         
     // preliminary variables for IDispacth interface initialization 
 
@@ -38,7 +38,7 @@ pub fn get_sheetname(dispatch_interface: IDispatch, dispid: i32) -> Result<Strin
     }
 }
 
-pub fn set_sheetname(dispatch_interface: IDispatch, dispid: i32) -> Result<()> {            
+pub fn set_sheetname(dispatch_interface: &IDispatch, dispid: i32) -> Result<()> {            
         
     // preliminary variables for IDispacth interface initialization 
 

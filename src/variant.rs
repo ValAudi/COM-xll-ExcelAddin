@@ -27,6 +27,7 @@ pub enum VariantType {
     VT_RECORD(VARIANT_0_0_0_0),
     VT_ARRAY(*mut SAFEARRAY),
     VT_ERROR(i32),
+    VT_NULL(),
 }
 
 pub fn variant_initialize(dec_val: Option<DECIMAL>, varenum: VARENUM, value: VariantType) -> VARIANT {
@@ -152,6 +153,9 @@ pub fn variant_initialize(dec_val: Option<DECIMAL>, varenum: VARENUM, value: Var
         VariantType::VT_ARRAY(value) => {
             // Also known as UINT or uintVal or Varenum 23 or VT_UINT
             struct_inner.Anonymous = VARIANT_0_0_0{ parray: value };
+            return variant_make;
+        },
+        VariantType::VT_NULL() => {
             return variant_make;
         },
         _ => {

@@ -12,6 +12,7 @@ pub mod worksheet;
 pub mod range;
 pub mod data;
 pub mod ribbon;
+pub mod menu;
 
 
 #[no_mangle]
@@ -28,6 +29,12 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
+
+pub fn add_menu() -> Result<(), Box<dyn Error>> {
+    let _t = automation::excel_automation::add_menu_ui()?;
+    Ok(())
+}
+
 pub fn test_ribbon() -> Result<(), Box<dyn Error>> {
     let _t = automation::excel_automation::modify_ui_ribbon()?;
     Ok(())
@@ -36,6 +43,7 @@ pub fn test_ribbon() -> Result<(), Box<dyn Error>> {
 pub fn test_variant() {
     let t = variant_initialize(None, VT_I2, VariantType::VT_I2(2));
     println!("{:#?}", unsafe { t.Anonymous.Anonymous.vt } );
+    
     println!("{:#?}", unsafe { t.Anonymous.Anonymous.Anonymous.iVal} );
 }
 
@@ -81,11 +89,16 @@ mod tests {
     }
 
     #[test]
-    fn ribbon_test()  -> Result<(), Box<dyn Error>> {
-        let ts = test_ribbon()?;   
+    fn menu_test()  -> Result<(), Box<dyn Error>> {
+        let _ts = add_menu()?;   
         Ok(())
     }
 
+    #[test]
+    fn ribbon_test()  -> Result<(), Box<dyn Error>> {
+        let _ts = test_ribbon()?;   
+        Ok(())
+    }
 
     #[test]
     fn works() {
