@@ -30,13 +30,13 @@ pub fn add(left: usize, right: usize) -> usize {
 }
 
 
-pub fn add_menu() -> Result<(), Box<dyn Error>> {
-    let _t = automation::excel_automation::add_menu_ui()?;
+pub fn test_ribbon_ui() -> Result<(), Box<dyn Error>> {
+    let _t = automation::excel_automation::modify_ui_ribbon()?;
     Ok(())
 }
 
-pub fn test_ribbon() -> Result<(), Box<dyn Error>> {
-    let _t = automation::excel_automation::modify_ui_ribbon()?;
+pub fn test_command_bar() -> Result<(), Box<dyn Error>> {
+    let _t = automation::excel_automation::modify_ui_menu()?;
     Ok(())
 }
 
@@ -89,14 +89,14 @@ mod tests {
     }
 
     #[test]
-    fn menu_test()  -> Result<(), Box<dyn Error>> {
-        let _ts = add_menu()?;   
+    fn ribbon_ui_test()  -> Result<(), Box<dyn Error>> {
+        let _ts = test_ribbon_ui()?;   
         Ok(())
     }
 
     #[test]
-    fn ribbon_test()  -> Result<(), Box<dyn Error>> {
-        let _ts = test_ribbon()?;   
+    fn menu_bar_test()  -> Result<(), Box<dyn Error>> {
+        let _ts = test_command_bar()?;   
         Ok(())
     }
 
