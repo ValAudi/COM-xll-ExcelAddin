@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 [dependencies.windows]
 version = "0.51.1"
 features = [
+    "implement",
     "Win32_UI_Ribbon",
     "Win32_System_LibraryLoader",
     "Win32_System_Com",

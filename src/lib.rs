@@ -13,6 +13,7 @@ pub mod range;
 pub mod data;
 pub mod ribbon;
 pub mod menu;
+pub mod com;
 
 
 #[no_mangle]
