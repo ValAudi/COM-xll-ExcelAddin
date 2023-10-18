@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use windows::Win32::System::Variant::*;
+use windows::Win32::{System::Variant::*, Foundation::{HINSTANCE, BOOL, TRUE}};
 use crate::variant::*;
 
 pub mod automation;
@@ -24,6 +24,26 @@ extern "system" fn xlAutoOpen() {
     // If this function is a placeholder, you can just return 0.\
 
     let _r = set_sheetname();
+}
+
+#[cfg(windows)]
+#[no_mangle]
+#[allow(non_snake_case, unused_variables)]
+extern "system" fn DllMain(
+    dll_module: HINSTANCE,
+    call_reason: u32,
+    reserved: *const u32)
+    -> BOOL
+{
+    const DLL_PROCESS_ATTACH: u32 = 1;
+    const DLL_PROCESS_DETACH: u32 = 0;
+
+    match call_reason {
+        DLL_PROCESS_ATTACH => (), // Any functioin can go on here that sets up things
+        DLL_PROCESS_DETACH => (),
+        _ => ()
+    }
+    TRUE
 }
 
 pub fn add(left: usize, right: usize) -> usize {

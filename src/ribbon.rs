@@ -4,7 +4,7 @@ use std::io::Read;
 use windows::Win32::System::Com::{IStream, CoCreateInstance, CLSCTX_ALL};
 use windows::Win32::System::Com::StructuredStorage::CreateStreamOnHGlobal;
 // use windows::Win32::System::LibraryLoader::GetModuleHandleA;
-use windows::Win32::UI::Ribbon::{UIRibbonFramework, IUIFramework, IUIRibbon};
+use windows::Win32::UI::Ribbon::{UIRibbonFramework, IUIFramework};
 use windows::core::GUID;
 use windows::core::{Result, Error};
 
@@ -43,8 +43,7 @@ pub fn load_customized_ribbon() ->Result<()> {
     let get_view = unsafe { ribbon_framework_interface.GetView(0 as u32, &IRIBBONUI, ppiuiribbon) };
     if get_view.is_ok() {
         let iuiribbon = unsafe { Box::from_raw(*ppiuiribbon) };
-        println!("----step 2: {:#?}", iuiribbon);
-        return Ok(());   
+        println!("----step 2: {:#?}", iuiribbon); 
     } else {
         let error_message: Error = get_view.unwrap_err();
         return Err(error_message);
