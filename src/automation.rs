@@ -10,6 +10,19 @@ pub mod excel_automation {
     use crate::menu;
     use crate::ribbon;
     // use crate::com;
+    use crate::registry;
+
+    pub fn registering() -> Result<()> 
+    {
+        unsafe { 
+            CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
+        }?;
+        let _ = registry::create_typelibrary()?;
+        unsafe {
+            CoUninitialize()
+        };
+        Ok(())
+    }
 
     pub fn modify_ui_ribbon() -> Result<()>
     {

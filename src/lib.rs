@@ -14,6 +14,7 @@ pub mod data;
 pub mod ribbon;
 pub mod menu;
 pub mod com;
+pub mod registry;
 
 
 #[no_mangle]
@@ -50,6 +51,10 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
+pub fn registering_type_library() -> Result<(), Box<dyn Error>>{
+    let _y = automation::excel_automation::registering()?;
+    Ok(())
+}
 
 pub fn test_ribbon_ui() -> Result<(), Box<dyn Error>> {
     let _t = automation::excel_automation::modify_ui_ribbon()?;
@@ -109,6 +114,11 @@ mod tests {
         assert_eq!(result, 4);
     }
 
+    #[test]
+    fn type_lib_test()  -> Result<(), Box<dyn Error>> {
+        let _s = registering_type_library()?;   
+        Ok(())
+    }
     #[test]
     fn ribbon_ui_test()  -> Result<(), Box<dyn Error>> {
         let _ts = test_ribbon_ui()?;   
