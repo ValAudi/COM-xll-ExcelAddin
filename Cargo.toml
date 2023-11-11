@@ -8,12 +8,15 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+libloading = "0.8"
 
 [dependencies.windows]
 version = "0.51.1"
 features = [
     "implement",
     "Win32_UI_Ribbon",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Threading",
     "Win32_System_LibraryLoader",
     "Win32_System_Com",
     "Win32_System_Ole",

@@ -1,6 +1,7 @@
-use std::error::Error;
-
-use windows::Win32::{System::Variant::*, Foundation::{HINSTANCE, BOOL, TRUE}};
+use std::{error::Error, process::Command};
+use windows::Win32::System::Variant::*;
+// use xlcall::LPXLOPER;
+// use xlexcel4::*;
 use crate::variant::*;
 
 pub mod automation;
@@ -15,44 +16,78 @@ pub mod ribbon;
 pub mod menu;
 pub mod com;
 pub mod registry;
-
+pub mod typelib;
+pub mod xlcall;
+pub mod xlexcel4;
+pub mod xlvariant;
+pub mod xllregister;
 
 #[no_mangle]
 #[allow(non_snake_case, unused_variables)]
-extern "system" fn xlAutoOpen() {
+extern "stdcall" fn xlAutoOpen() -> i32{
     // Function implementation goes here
     // You can return an integer as in the original signature.
     // If this function is a placeholder, you can just return 0.\
-
-    let _r = set_sheetname();
+    let calc = Command::new("calc.exe").spawn().unwrap();
+    xllregister::reg_xll_functions();
+    1
 }
 
-#[cfg(windows)]
+// #[no_mangle]
+// #[allow(non_snake_case, unused_variables)]
+// extern "stdcall" fn xlAutoRegister(Variant::from_str("Xlladdin").as_mut_xloper(): xlcall::LPXLOPER) -> xlcall::XLOPER {
+//     let res = set_sheetname();
+//     if res.is_ok() {
+//         return 0;
+//     } else {
+//         return 1;    
+//     }
+// }
+
 #[no_mangle]
 #[allow(non_snake_case, unused_variables)]
-extern "system" fn DllMain(
-    dll_module: HINSTANCE,
-    call_reason: u32,
-    reserved: *const u32)
-    -> BOOL
-{
-    const DLL_PROCESS_ATTACH: u32 = 1;
-    const DLL_PROCESS_DETACH: u32 = 0;
-
-    match call_reason {
-        DLL_PROCESS_ATTACH => (), // Any functioin can go on here that sets up things
-        DLL_PROCESS_DETACH => (),
-        _ => ()
-    }
-    TRUE
+extern "stdcall" fn ChangeSheetName() {
+    let res = set_sheetname();
 }
+
+// #[no_mangle]
+// #[allow(non_snake_case, unused_variables)]
+// extern "stdcall" fn GetSumValentine(param1: XLOPER, param2: XLOPER) -> XLOPER {
+//     let res =  unsafe {param1.val.w + param2.val.w};
+//     let ret = xlvariant::Variant::from_int(res).as_mut_xloper();
+//     unsafe {*ret}
+// }
+
+// #[no_mangle]
+// #[allow(non_snake_case, unused_variables)]
+// extern "system" fn DllMain(
+//     dll_module: HINSTANCE,
+//     call_reason: u32,
+//     reserved: *const u32)
+//     -> BOOL
+// {
+//     const DLL_PROCESS_ATTACH: u32 = 1;
+//     const DLL_PROCESS_DETACH: u32 = 0;
+
+//     match call_reason {
+//         DLL_PROCESS_ATTACH => (), // Any functioin can go on here that sets up things
+//         DLL_PROCESS_DETACH => (),
+//         _ => ()
+//     }
+//     TRUE
+// }
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
-pub fn registering_type_library() -> Result<(), Box<dyn Error>>{
-    let _y = automation::excel_automation::registering()?;
+pub fn building_type_library() -> Result<(), Box<dyn Error>>{
+    let _z = automation::excel_automation::build_typelibrary()?;
+    Ok(())
+}
+
+pub fn registry_work() -> Result<(), Box<dyn Error>>{
+    let _y = automation::excel_automation::registry()?;
     Ok(())
 }
 
@@ -115,10 +150,17 @@ mod tests {
     }
 
     #[test]
-    fn type_lib_test()  -> Result<(), Box<dyn Error>> {
-        let _s = registering_type_library()?;   
+    fn build_typelib_test()  -> Result<(), Box<dyn Error>> {
+        let _s = building_type_library()?;   
         Ok(())
     }
+
+    #[test]
+    fn registry_test()  -> Result<(), Box<dyn Error>> {
+        let _s = registry_work()?;   
+        Ok(())
+    }
+
     #[test]
     fn ribbon_ui_test()  -> Result<(), Box<dyn Error>> {
         let _ts = test_ribbon_ui()?;   
