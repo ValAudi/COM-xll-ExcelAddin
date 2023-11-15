@@ -3,14 +3,24 @@ use windows::Win32::System::Registry::*;
 use crate::typelib::*;
 
 pub fn create_registry_entry<T: RegistryConfigs>(reg_info: &T) -> windows::core::Result<()> {
-    let subkey_path = format!("{{{:#?}}}\\{{{:#?}}}", reg_info.get_subkey(), unsafe {*reg_info.get_iid()});
-    let lp_subkey = convert_to_pcwstr(&subkey_path.as_str());
-    
+    let lp_sub = format!("{{{:#?}}}\\{{{:#?}}}", reg_info.get_subkey(), unsafe {*reg_info.get_iid()});
+    let _ = create_reg_entry(reg_info, lp_sub)?;
+    if let Some(subkeys) = reg_info.get_extra_subkey() {
+        for j in 0..subkeys.len() {
+            let lp_subkeys = format!("{{{:#?}}}\\{{{:#?}}}\\{{{:#?}}}", reg_info.get_subkey(), unsafe {*reg_info.get_iid()}, subkeys[j]);
+            let _ = create_reg_entry(reg_info, lp_subkeys)?;
+        }
+    }
+    Ok(())
+}
+
+fn create_reg_entry<T: RegistryConfigs>(registry_info: &T, subkey: String) -> windows::core::Result<()> {
+    let lp_subkey = convert_to_pcwstr(&subkey.as_str());
     let key: *mut HKEY = Box::into_raw(Box::new(unsafe { std::mem::zeroed() }));
     let lp_dwdisposition: Option<*mut REG_CREATE_KEY_DISPOSITION> = Some(Box::into_raw(Box::new(unsafe { std::mem::zeroed() })));
     let _create_key = unsafe { 
         RegCreateKeyExW(
-            HKEY_CURRENT_USER, 
+            registry_info.get_hkey(), 
             lp_subkey, 
             0, 
             None, 
@@ -57,17 +67,17 @@ pub fn open_registry_entry() -> windows::core::Result<()> {
 }
 
 pub fn set_registry_key_value<T: RegistryConfigs> (reg_info: &T) -> windows::core::Result<()> {
-    // cbData depends on this value for Example REG_SZ is null terminated by a single 0 hence cbData = 1
-    // whereas for REG_MULTI_SZ is double null terminated hence cbData = 2
-    let _att = unsafe {
-        RegSetKeyValueW(
-            reg_info.get_hkey(), 
-            convert_to_pcwstr(reg_info.get_subkey().as_str()), 
-            reg_info.get_reg_conf()[0].value_name.unwrap(),
-            reg_info.get_reg_conf()[0].value_type.unwrap().0, 
-            reg_info.get_reg_conf()[0].value_data, 
-            reg_info.get_reg_conf()[0].cb_data,
-        )
-    }?;
+    for i in 0..reg_info.get_reg_conf().len() {
+        let _att = unsafe {
+            RegSetKeyValueW(
+                reg_info.get_hkey(), 
+                convert_to_pcwstr(format!("{{{:#?}}}\\{{{:#?}}}", reg_info.get_subkey(), reg_info.get_reg_conf()[i].subkey).as_str()), 
+                reg_info.get_reg_conf()[i].value_name.unwrap(), // CHeck how it works for default values
+                reg_info.get_reg_conf()[i].value_type.unwrap().0, 
+                reg_info.get_reg_conf()[i].value_data, 
+                reg_info.get_reg_conf()[i].cb_data,
+            )
+        }?;
+    }
     Ok(())    
 }

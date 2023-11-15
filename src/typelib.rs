@@ -5,6 +5,7 @@ const IUNKNOWN: GUID = GUID::from_values(0x00000000, 0x0000, 0x0000, [0xC0, 0x00
 const STD_OLE_GUID: GUID = GUID::from_values(0x00020430, 0x0000, 0x0000, [0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46]);
 
 // Holds the Type Library Information
+#[derive(Debug)]
 pub struct TypeLibInfo {
     pub path: PCWSTR,
     pub name: PCWSTR,
@@ -12,6 +13,7 @@ pub struct TypeLibInfo {
     pub iid: *const GUID,
     pub hkey: HKEY,
     pub subkey: String,
+    pub extra_subkeys: Option<Vec<String>>,
     pub reg_conf: Vec<RegConfigs>,
 }
 
@@ -22,8 +24,9 @@ impl TypeLibInfo {
             name: convert_to_pcwstr(name),
             desc: convert_to_pcwstr(desc),
             iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_LOCAL_MACHINE,
-            subkey: String::from("SOFTWARE\\Classes\\CLSID\\"), // Figure out these two
+            hkey: HKEY_CLASSES_ROOT,
+            subkey: String::from("TypeLib\\"), 
+            extra_subkeys: Some(Vec::new()),
             reg_conf: Vec::new(),
         };
         Ok(instance)
@@ -31,11 +34,13 @@ impl TypeLibInfo {
 }
 
 // Holds the function interface Information
+#[derive(Debug)]
 pub struct FInterface {
     pub name: PCWSTR,
     pub iid: *const GUID,
     pub hkey: HKEY,
     pub subkey: String,
+    pub extra_subkeys: Option<Vec<String>>,
     pub reg_conf: Vec<RegConfigs>,
 }
 
@@ -44,19 +49,22 @@ impl FInterface {
         let instance = FInterface {
             name: convert_to_pcwstr(name),
             iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_LOCAL_MACHINE,
-            subkey: String::from("SOFTWARE\\Classes\\CLSID\\"), // Figure out these two
+            hkey: HKEY_CLASSES_ROOT,
+            subkey: String::from("Interfaces\\"),
+            extra_subkeys: None,
             reg_conf: Vec::new(),
         };
         Ok(instance)
     }
 }
 // Holds the COM Class Object information
+#[derive(Debug)]
 pub struct CoClassInt {
     pub name: PCWSTR,
     pub iid: *const GUID,
     pub hkey: HKEY,
     pub subkey: String,
+    pub extra_subkeys: Option<Vec<String>>,
     pub reg_conf: Vec<RegConfigs> 
 }
 
@@ -65,17 +73,17 @@ impl CoClassInt {
         let instance = CoClassInt {
             name: convert_to_pcwstr(name),
             iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_CURRENT_USER, 
-            subkey: String::from("SOFTWARE\\Classes\\CLSID\\"),
-            reg_conf: vec![ 
-                RegConfigs::add(None, None, None, 0)
-            ]
+            hkey: HKEY_CLASSES_ROOT, 
+            subkey: String::from("CLSID"),
+            extra_subkeys: None,
+            reg_conf: Vec::new(),
         };
         Ok(instance)
     }
 }
-
+#[derive(Debug)]
 pub struct RegConfigs {
+    pub subkey: String,
     pub value_name: Option<PCWSTR>,
     pub value_type: Option<REG_VALUE_TYPE>,
     pub value_data: Option<*const c_void>,
@@ -84,12 +92,14 @@ pub struct RegConfigs {
 
 impl RegConfigs {
     pub fn add(
+        subkey: String,
         value_name: Option<PCWSTR>, 
         value_type: Option<REG_VALUE_TYPE>,
         value_data: Option<*const c_void>,
         cb_data: u32,
      ) -> RegConfigs {
         let instance = RegConfigs {
+            subkey: subkey,
             value_name: value_name,
             value_type: value_type,
             value_data: value_data,
@@ -105,6 +115,7 @@ pub trait RegistryConfigs {
     fn get_subkey(&self) -> String;
     fn get_hkey(&self) -> HKEY;
     fn get_reg_conf(&self) -> &Vec<RegConfigs>;
+    fn get_extra_subkey(&self) -> &Option<Vec<String>>;
 }
 
 impl RegistryConfigs for TypeLibInfo {
@@ -113,6 +124,7 @@ impl RegistryConfigs for TypeLibInfo {
     fn get_subkey(&self) -> String { self.subkey.clone() }
     fn get_hkey(&self) -> HKEY { self.hkey}
     fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf }
+    fn get_extra_subkey(&self) -> &Option<Vec<String>> { &self.extra_subkeys }
 }
 
 impl RegistryConfigs for CoClassInt {
@@ -120,7 +132,8 @@ impl RegistryConfigs for CoClassInt {
     fn get_subkey(&self) -> String { self.subkey.clone() }
     fn get_iid(&self) -> *const GUID { self.iid }
     fn get_hkey(&self) -> HKEY { self.hkey}
-    fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf}
+    fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf }
+    fn get_extra_subkey(&self) -> &Option<Vec<String>> { &self.extra_subkeys }
 }
 
 impl RegistryConfigs for FInterface {
@@ -128,9 +141,10 @@ impl RegistryConfigs for FInterface {
     fn get_subkey(&self) -> String { self.subkey.clone() }
     fn get_iid(&self) -> *const GUID { self.iid }
     fn get_hkey(&self) -> HKEY { self.hkey}
-    fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf}
+    fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf }
+    fn get_extra_subkey(&self) -> &Option<Vec<String>> { &self.extra_subkeys }
 }
-
+#[derive(Debug)]
 pub struct TypeLibDef {
     pub type_library: TypeLibInfo,
     pub interface: FInterface,
@@ -140,15 +154,15 @@ pub struct TypeLibDef {
 impl TypeLibDef {
     pub fn new() ->  windows::core::Result<TypeLibDef> {
         let instance = TypeLibDef {
-            type_library: TypeLibInfo::new("C:\\mylib.tlb", "MyAddinLibrary", "My Addin Library Description")?,
-            interface: FInterface::new("MyAddinInterface")?,
-            coclass: CoClassInt::new("MyAddinCoClass")?,
+            type_library: TypeLibInfo::new("C:\\System32\\NationalAccounts.tlb", "National Accounts", "National Accounts Type Library")?,
+            interface: FInterface::new("INationalAccounts")?,
+            coclass: CoClassInt::new("NationalAccountsCoClass")?,
         };
         Ok(instance)
     }
 }
 
-pub fn create_typelibrary(tl_data: TypeLibDef) -> windows::core::Result<ICreateTypeInfo> {
+pub fn create_typelibrary(tl_data: TypeLibDef) -> windows::core::Result<()> {
     // Create a Type Library Configurator
     let tlb_conf = unsafe { CreateTypeLib2(SYS_WIN32, tl_data.type_library.path) }?;
     unsafe { 
@@ -169,11 +183,24 @@ pub fn create_typelibrary(tl_data: TypeLibDef) -> windows::core::Result<ICreateT
     // Associate the TypeLib interface with the IUNKNOWN interface
     let std_ole_typelib = unsafe { LoadRegTypeLib(Box::into_raw(Box::new(STD_OLE_GUID)), 2, 0, 0)? };
     let unknwn = unsafe { std_ole_typelib.GetTypeInfoOfGuid(Box::into_raw(Box::new(IUNKNOWN)))? };
-    let _void = interface_association(&unknwn, &iid_typeinfo, None)?;
+    let _ = interface_association(&unknwn, &iid_typeinfo, None)?;
 
-    Ok(iid_typeinfo)
+    // Build the function description and saving the changes
+    let _ = function_description(&iid_typeinfo)?;
+    let _ = unsafe { tlb_conf.SaveAllChanges() }?;
+
+    // Regsiter the Type Library
+    let _ = unsafe { 
+        RegisterTypeLib(
+            &tlb_conf.cast::<ITypeLib>()?, 
+            convert_to_pcwstr("C:\\System32\\NationalAccounts.tlb"), 
+            convert_to_pcwstr("")
+        ) 
+    }?;
+
+    Ok(())
 }
-
+#[allow(dead_code)]
 pub fn function_description (create_typeinfo: &ICreateTypeInfo) -> windows::core::Result<()> {
 
     let mut type_desc = TYPEDESC::default();
@@ -217,6 +244,8 @@ pub fn function_description (create_typeinfo: &ICreateTypeInfo) -> windows::core
         let _ = create_typeinfo.SetFuncAndParamNames(1, &param_names);
     };
 
+    // Assigning Offsets
+    let _ = unsafe { create_typeinfo.LayOut() }?;
     Ok(())
 }
 

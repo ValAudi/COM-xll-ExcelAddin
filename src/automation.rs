@@ -12,32 +12,20 @@ pub mod excel_automation {
     use crate::menu;
     use crate::ribbon;
     // use crate::com;
-    use crate::registry::*;
+    use crate::appreg::*;
 
-    pub fn build_typelibrary() -> Result<()> 
-    {   
+    pub fn build_typelibrary() -> Result<()> {   
         let tlb_data = TypeLibDef::new()?;
-        let interface_handler = typelib::create_typelibrary(tlb_data)?;
-        let _ = function_description(&interface_handler)?;
+        let _ = typelib::create_typelibrary(tlb_data)?;
         Ok(())
     }
 
-    pub fn dll_registry() -> Result<()> 
-    {
-        // I have three interfaces to register. 
-        //      1: is the function interface
-        //      2: Is the COM CLass interface. Here is where the InprocServer Value will also be set
-        //      3: The type library interface.
-        // Immediately after these registrations with the registry the typelibrary has to be built and the Information saved
-        let tlb_data = TypeLibDef::new()?;
-        let _r = create_registry_entry(&tlb_data.coclass)?;
-        let _s = set_registry_key_value(&tlb_data.coclass)?;
-
+    pub fn dll_registry() -> Result<()> {
+        app_configuration()?;
         Ok(())
     }
 
-    pub fn modify_ui_ribbon() -> Result<()>
-    {
+    pub fn modify_ui_ribbon() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
@@ -52,8 +40,7 @@ pub mod excel_automation {
     } 
 
 
-    pub fn modify_ui_menu() -> Result<()>
-    {
+    pub fn modify_ui_menu() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
@@ -214,8 +201,7 @@ pub mod excel_automation {
         Ok(())
     } 
 
-    pub fn set_range_values() -> Result<()>
-    {
+    pub fn set_range_values() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
@@ -233,8 +219,7 @@ pub mod excel_automation {
         Ok(())
     } 
 
-    pub fn retrieve_range_values() -> Result<()>
-    {
+    pub fn retrieve_range_values() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
@@ -252,8 +237,7 @@ pub mod excel_automation {
         Ok(())
     } 
 
-    pub fn retrieve_worksheet_name() -> Result<()>
-    {
+    pub fn retrieve_worksheet_name() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
@@ -270,8 +254,7 @@ pub mod excel_automation {
         Ok(())
     }
 
-    pub fn retrieve_value() -> Result<()>
-    {
+    pub fn retrieve_value() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
@@ -288,8 +271,7 @@ pub mod excel_automation {
         Ok(())
     } 
 
-    pub fn insert_value() -> Result<()>
-    {
+    pub fn insert_value() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
@@ -306,8 +288,7 @@ pub mod excel_automation {
         Ok(())
     }
 
-    pub fn set_worksheet_name() -> Result<()>
-    {
+    pub fn set_worksheet_name() -> Result<()> {
         // Initialize a COM 
         unsafe { 
             CoInitializeEx(None, COINIT_APARTMENTTHREADED) 

@@ -1,4 +1,4 @@
-use std::{error::Error, process::Command, ffi::c_void};
+use std::error::Error;
 use windows::{Win32::{System::Variant::*, Foundation::*}, core::HRESULT};
 // use xlcall::LPXLOPER;
 // use xlexcel4::*;
@@ -21,6 +21,7 @@ pub mod xlcall;
 pub mod xlexcel4;
 pub mod xlvariant;
 pub mod xllregister;
+pub mod appreg;
 
 // #[no_mangle]
 // #[allow(non_snake_case, unused_variables)]
