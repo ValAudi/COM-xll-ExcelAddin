@@ -1,5 +1,6 @@
 use windows::core::*;
 use windows::Win32::System::Registry::*;
+use crate::regkeys::RegistryConfigs;
 use crate::typelib::*;
 
 pub fn create_registry_entry<T: RegistryConfigs>(reg_info: &T) -> windows::core::Result<()> {

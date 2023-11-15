@@ -21,7 +21,7 @@ pub mod xlcall;
 pub mod xlexcel4;
 pub mod xlvariant;
 pub mod xllregister;
-pub mod appreg;
+pub mod regkeys;
 
 // #[no_mangle]
 // #[allow(non_snake_case, unused_variables)]
@@ -105,13 +105,8 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
-pub fn building_type_library() -> Result<(), Box<dyn Error>>{
-    let _z = automation::excel_automation::build_typelibrary()?;
-    Ok(())
-}
-
 pub fn registry_work() -> Result<(), Box<dyn Error>>{
-    let _y = automation::excel_automation::dll_registry()?;
+    let _y = automation::excel_automation::register_com_interfaces()?;
     Ok(())
 }
 
@@ -171,12 +166,6 @@ mod tests {
     fn it_works() {
         let result = add(2, 2);
         assert_eq!(result, 4);
-    }
-
-    #[test]
-    fn build_typelib_test()  -> Result<(), Box<dyn Error>> {
-        let _s = building_type_library()?;   
-        Ok(())
     }
 
     #[test]

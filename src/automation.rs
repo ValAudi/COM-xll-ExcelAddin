@@ -3,8 +3,6 @@ pub mod excel_automation {
     use windows::{Win32::System::Com::*, core::*};
     use crate::rot;
     use crate::dispatch;
-    use crate::typelib;
-    use crate::typelib::*;
     use crate::workbook;
     use crate::worksheet;
     use crate::range;
@@ -12,16 +10,10 @@ pub mod excel_automation {
     use crate::menu;
     use crate::ribbon;
     // use crate::com;
-    use crate::appreg::*;
+    use crate::regkeys::*;
 
-    pub fn build_typelibrary() -> Result<()> {   
-        let tlb_data = TypeLibDef::new()?;
-        let _ = typelib::create_typelibrary(tlb_data)?;
-        Ok(())
-    }
-
-    pub fn dll_registry() -> Result<()> {
-        app_configuration()?;
+    pub fn register_com_interfaces() -> Result<()> {
+        registry_all()?;
         Ok(())
     }
 

@@ -1,168 +1,10 @@
-use std::ffi::c_void;
-use windows::{core::*, Win32::System::{Ole::*, Com::*, SystemServices::LANG_NEUTRAL, Variant::*, Registry::*}};
+use windows::{core::*, Win32::System::{Ole::*, Com::*, SystemServices::LANG_NEUTRAL, Variant::*}};
+use crate::regkeys::*;
 
 const IUNKNOWN: GUID = GUID::from_values(0x00000000, 0x0000, 0x0000, [0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46]);
 const STD_OLE_GUID: GUID = GUID::from_values(0x00020430, 0x0000, 0x0000, [0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46]);
 
-// Holds the Type Library Information
-#[derive(Debug)]
-pub struct TypeLibInfo {
-    pub path: PCWSTR,
-    pub name: PCWSTR,
-    pub desc: PCWSTR,
-    pub iid: *const GUID,
-    pub hkey: HKEY,
-    pub subkey: String,
-    pub extra_subkeys: Option<Vec<String>>,
-    pub reg_conf: Vec<RegConfigs>,
-}
-
-impl TypeLibInfo {
-    pub fn new(path: &str, name: &str, desc: &str) -> windows::core::Result<TypeLibInfo> {
-        let instance = TypeLibInfo {
-            path: convert_to_pcwstr(path),
-            name: convert_to_pcwstr(name),
-            desc: convert_to_pcwstr(desc),
-            iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_CLASSES_ROOT,
-            subkey: String::from("TypeLib\\"), 
-            extra_subkeys: Some(Vec::new()),
-            reg_conf: Vec::new(),
-        };
-        Ok(instance)
-    }
-}
-
-// Holds the function interface Information
-#[derive(Debug)]
-pub struct FInterface {
-    pub name: PCWSTR,
-    pub iid: *const GUID,
-    pub hkey: HKEY,
-    pub subkey: String,
-    pub extra_subkeys: Option<Vec<String>>,
-    pub reg_conf: Vec<RegConfigs>,
-}
-
-impl FInterface {
-    pub fn new(name: &str) -> windows::core::Result<FInterface> {
-        let instance = FInterface {
-            name: convert_to_pcwstr(name),
-            iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_CLASSES_ROOT,
-            subkey: String::from("Interfaces\\"),
-            extra_subkeys: None,
-            reg_conf: Vec::new(),
-        };
-        Ok(instance)
-    }
-}
-// Holds the COM Class Object information
-#[derive(Debug)]
-pub struct CoClassInt {
-    pub name: PCWSTR,
-    pub iid: *const GUID,
-    pub hkey: HKEY,
-    pub subkey: String,
-    pub extra_subkeys: Option<Vec<String>>,
-    pub reg_conf: Vec<RegConfigs> 
-}
-
-impl CoClassInt {
-    pub fn new(name: &str) -> windows::core::Result<CoClassInt> {
-        let instance = CoClassInt {
-            name: convert_to_pcwstr(name),
-            iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_CLASSES_ROOT, 
-            subkey: String::from("CLSID"),
-            extra_subkeys: None,
-            reg_conf: Vec::new(),
-        };
-        Ok(instance)
-    }
-}
-#[derive(Debug)]
-pub struct RegConfigs {
-    pub subkey: String,
-    pub value_name: Option<PCWSTR>,
-    pub value_type: Option<REG_VALUE_TYPE>,
-    pub value_data: Option<*const c_void>,
-    pub cb_data: u32
-}
-
-impl RegConfigs {
-    pub fn add(
-        subkey: String,
-        value_name: Option<PCWSTR>, 
-        value_type: Option<REG_VALUE_TYPE>,
-        value_data: Option<*const c_void>,
-        cb_data: u32,
-     ) -> RegConfigs {
-        let instance = RegConfigs {
-            subkey: subkey,
-            value_name: value_name,
-            value_type: value_type,
-            value_data: value_data,
-            cb_data: cb_data
-        };
-        instance
-    }
-}
-
-pub trait RegistryConfigs {
-    fn get_name(&self) -> PCWSTR;
-    fn get_iid(&self) -> *const GUID;
-    fn get_subkey(&self) -> String;
-    fn get_hkey(&self) -> HKEY;
-    fn get_reg_conf(&self) -> &Vec<RegConfigs>;
-    fn get_extra_subkey(&self) -> &Option<Vec<String>>;
-}
-
-impl RegistryConfigs for TypeLibInfo {
-    fn get_name(&self) -> PCWSTR { self.name }
-    fn get_iid(&self) -> *const GUID { self.iid }
-    fn get_subkey(&self) -> String { self.subkey.clone() }
-    fn get_hkey(&self) -> HKEY { self.hkey}
-    fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf }
-    fn get_extra_subkey(&self) -> &Option<Vec<String>> { &self.extra_subkeys }
-}
-
-impl RegistryConfigs for CoClassInt {
-    fn get_name(&self) -> PCWSTR { self.name }
-    fn get_subkey(&self) -> String { self.subkey.clone() }
-    fn get_iid(&self) -> *const GUID { self.iid }
-    fn get_hkey(&self) -> HKEY { self.hkey}
-    fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf }
-    fn get_extra_subkey(&self) -> &Option<Vec<String>> { &self.extra_subkeys }
-}
-
-impl RegistryConfigs for FInterface {
-    fn get_name(&self) -> PCWSTR { self.name }
-    fn get_subkey(&self) -> String { self.subkey.clone() }
-    fn get_iid(&self) -> *const GUID { self.iid }
-    fn get_hkey(&self) -> HKEY { self.hkey}
-    fn get_reg_conf(&self) -> &Vec<RegConfigs> { &self.reg_conf }
-    fn get_extra_subkey(&self) -> &Option<Vec<String>> { &self.extra_subkeys }
-}
-#[derive(Debug)]
-pub struct TypeLibDef {
-    pub type_library: TypeLibInfo,
-    pub interface: FInterface,
-    pub coclass: CoClassInt,
-}
-
-impl TypeLibDef {
-    pub fn new() ->  windows::core::Result<TypeLibDef> {
-        let instance = TypeLibDef {
-            type_library: TypeLibInfo::new("C:\\System32\\NationalAccounts.tlb", "National Accounts", "National Accounts Type Library")?,
-            interface: FInterface::new("INationalAccounts")?,
-            coclass: CoClassInt::new("NationalAccountsCoClass")?,
-        };
-        Ok(instance)
-    }
-}
-
-pub fn create_typelibrary(tl_data: TypeLibDef) -> windows::core::Result<()> {
+pub fn create_typelibrary(tl_data: &TypeLibDef) -> windows::core::Result<()> {
     // Create a Type Library Configurator
     let tlb_conf = unsafe { CreateTypeLib2(SYS_WIN32, tl_data.type_library.path) }?;
     unsafe { 
@@ -200,7 +42,7 @@ pub fn create_typelibrary(tl_data: TypeLibDef) -> windows::core::Result<()> {
 
     Ok(())
 }
-#[allow(dead_code)]
+
 pub fn function_description (create_typeinfo: &ICreateTypeInfo) -> windows::core::Result<()> {
 
     let mut type_desc = TYPEDESC::default();
