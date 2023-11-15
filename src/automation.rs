@@ -4,8 +4,7 @@ pub mod excel_automation {
     use crate::rot;
     use crate::dispatch;
     use crate::typelib;
-    use crate::typelib::TypeLibDef;
-    use crate::typelib::function_description;
+    use crate::typelib::*;
     use crate::workbook;
     use crate::worksheet;
     use crate::range;
@@ -13,8 +12,7 @@ pub mod excel_automation {
     use crate::menu;
     use crate::ribbon;
     // use crate::com;
-    use crate::registry;
-    
+    use crate::registry::*;
 
     pub fn build_typelibrary() -> Result<()> 
     {   
@@ -24,10 +22,17 @@ pub mod excel_automation {
         Ok(())
     }
 
-    pub fn registry() -> Result<()> 
+    pub fn dll_registry() -> Result<()> 
     {
-        let _ = registry::create_registry_entry()?;
-        let _ = registry::open_registry_entry()?;
+        // I have three interfaces to register. 
+        //      1: is the function interface
+        //      2: Is the COM CLass interface. Here is where the InprocServer Value will also be set
+        //      3: The type library interface.
+        // Immediately after these registrations with the registry the typelibrary has to be built and the Information saved
+        let tlb_data = TypeLibDef::new()?;
+        let _r = create_registry_entry(&tlb_data.coclass)?;
+        let _s = set_registry_key_value(&tlb_data.coclass)?;
+
         Ok(())
     }
 

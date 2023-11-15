@@ -1,5 +1,5 @@
-use std::{error::Error, process::Command};
-use windows::Win32::System::Variant::*;
+use std::{error::Error, process::Command, ffi::c_void};
+use windows::{Win32::{System::Variant::*, Foundation::*}, core::HRESULT};
 // use xlcall::LPXLOPER;
 // use xlexcel4::*;
 use crate::variant::*;
@@ -22,16 +22,16 @@ pub mod xlexcel4;
 pub mod xlvariant;
 pub mod xllregister;
 
-#[no_mangle]
-#[allow(non_snake_case, unused_variables)]
-extern "stdcall" fn xlAutoOpen() -> i32{
-    // Function implementation goes here
-    // You can return an integer as in the original signature.
-    // If this function is a placeholder, you can just return 0.\
-    let calc = Command::new("calc.exe").spawn().unwrap();
-    xllregister::reg_xll_functions();
-    1
-}
+// #[no_mangle]
+// #[allow(non_snake_case, unused_variables)]
+// extern "stdcall" fn xlAutoOpen() -> i32{
+//     // Function implementation goes here
+//     // You can return an integer as in the original signature.
+//     // If this function is a placeholder, you can just return 0.\
+//     let calc = Command::new("calc.exe").spawn().unwrap();
+//     xllregister::reg_xll_functions();
+//     1
+// }
 
 // #[no_mangle]
 // #[allow(non_snake_case, unused_variables)]
@@ -44,11 +44,11 @@ extern "stdcall" fn xlAutoOpen() -> i32{
 //     }
 // }
 
-#[no_mangle]
-#[allow(non_snake_case, unused_variables)]
-extern "stdcall" fn ChangeSheetName() {
-    let res = set_sheetname();
-}
+// #[no_mangle]
+// #[allow(non_snake_case, unused_variables)]
+// extern "stdcall" fn ChangeSheetName() {
+//     let res = set_sheetname();
+// }
 
 // #[no_mangle]
 // #[allow(non_snake_case, unused_variables)]
@@ -76,6 +76,29 @@ extern "stdcall" fn ChangeSheetName() {
 //     }
 //     TRUE
 // }
+#[no_mangle]
+#[allow(non_snake_case, unused_variables, dead_code)]
+extern "stdcall" fn DllGetClassObject() -> HRESULT {
+    S_OK
+}
+
+#[no_mangle]
+#[allow(non_snake_case, unused_variables, dead_code)]
+extern "stdcall" fn DllRegisterServer() -> HRESULT {
+    S_OK
+}
+
+#[no_mangle]
+#[allow(non_snake_case, unused_variables, dead_code)]
+extern "stdcall" fn DllUnregisterServer() -> HRESULT {
+    S_OK
+}
+
+#[no_mangle]
+#[allow(non_snake_case, unused_variables, dead_code)]
+extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
+    S_OK
+}
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
@@ -87,7 +110,7 @@ pub fn building_type_library() -> Result<(), Box<dyn Error>>{
 }
 
 pub fn registry_work() -> Result<(), Box<dyn Error>>{
-    let _y = automation::excel_automation::registry()?;
+    let _y = automation::excel_automation::dll_registry()?;
     Ok(())
 }
 
