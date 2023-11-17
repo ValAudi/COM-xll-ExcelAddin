@@ -1,5 +1,6 @@
 use std::error::Error;
-use windows::{Win32::{System::Variant::*, Foundation::*}, core::HRESULT};
+use com::*;
+use windows::{Win32::{System::{Com::*, Variant::*}, Foundation::*, UI::WindowsAndMessaging::MessageBoxA}, core::{HRESULT, PCSTR, s, GUID}};
 // use xlcall::LPXLOPER;
 // use xlexcel4::*;
 use crate::variant::*;
@@ -79,20 +80,55 @@ pub mod regkeys;
 // }
 #[no_mangle]
 #[allow(non_snake_case, unused_variables, dead_code)]
-extern "stdcall" fn DllGetClassObject() -> HRESULT {
+extern "stdcall" fn DllGetClassObject(rclsid: *const GUID, riid: *const GUID, ppv: *mut *mut std::ffi::c_void) -> HRESULT {
+    
     S_OK
 }
 
 #[no_mangle]
 #[allow(non_snake_case, unused_variables, dead_code)]
 extern "stdcall" fn DllRegisterServer() -> HRESULT {
-    S_OK
+    let res = automation::excel_automation::register_com_interfaces(); 
+    if res.is_ok() {
+        unsafe {
+            MessageBoxA(HWND(0),
+            PCSTR(String::from("National Accounts Library Successfully Installed!\0").as_ptr()),
+            s!("National Accounts Library"),
+            Default::default());
+        };
+        return S_OK;
+    } else {
+        unsafe {
+            MessageBoxA(HWND(0),
+            PCSTR(std::format!("National Accounts Library Registration Encountered an Error: {} \0", res.unwrap_err().to_string()).as_ptr()),
+            s!("National Accounts Library"),
+            Default::default());
+        };
+        return S_FALSE;
+    }
 }
 
 #[no_mangle]
 #[allow(non_snake_case, unused_variables, dead_code)]
 extern "stdcall" fn DllUnregisterServer() -> HRESULT {
-    S_OK
+    let res = automation::excel_automation::register_com_interfaces(); 
+    if res.is_ok() {
+        unsafe {
+            MessageBoxA(HWND(0),
+            PCSTR(String::from("National Accounts Library Successfully Uninstalled!\0").as_ptr()),
+            s!("National Accounts Library"),
+            Default::default());
+        };
+        return S_OK;
+    } else {
+        unsafe {
+            MessageBoxA(HWND(0),
+            PCSTR(std::format!("National Accounts Library Encountered an Error during Uninstallation: {} \0", res.unwrap_err().to_string()).as_ptr()),
+            s!("National Accounts Library"),
+            Default::default());
+        };
+        return S_FALSE;
+    }
 }
 
 #[no_mangle]

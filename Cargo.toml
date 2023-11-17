@@ -11,8 +11,8 @@ crate-type = ["cdylib"]
 libloading = "0.8"
 
 [dependencies.windows]
-version = "0.51.1"
-features = [
+version = "0.52.0"
+features = [   
     "implement",
     "Win32_UI_Ribbon",
     "Win32_UI_WindowsAndMessaging",

@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 use windows::{Win32::System::Registry::*, core::*};
-use crate::{typelib::*, registry::*};
+use crate::{typelib::*, registry::*, typelib::convert_to_pcwstr};
 
 // Holds the Type Library Information
 #[derive(Debug)]
@@ -22,8 +22,8 @@ impl TypeLibInfo {
             name: convert_to_pcwstr(name),
             desc: convert_to_pcwstr(desc),
             iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_CLASSES_ROOT,
-            subkey: String::from("TypeLib\\"), 
+            hkey: HKEY_LOCAL_MACHINE,
+            subkey: String::from("SOFTWARE\\Classes\\TypeLib"), 
             extra_subkeys: Some(Vec::new()),
             reg_conf: Vec::new(),
         };
@@ -47,8 +47,8 @@ impl FInterface {
         let instance = FInterface {
             name: convert_to_pcwstr(name),
             iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_CLASSES_ROOT,
-            subkey: String::from("Interfaces\\"),
+            hkey: HKEY_LOCAL_MACHINE,
+            subkey: String::from("SOFTWARE\\Classes\\Interface"),
             extra_subkeys: None,
             reg_conf: Vec::new(),
         };
@@ -71,8 +71,8 @@ impl CoClassInt {
         let instance = CoClassInt {
             name: convert_to_pcwstr(name),
             iid: Box::into_raw(Box::new(GUID::new()?)),
-            hkey: HKEY_CLASSES_ROOT, 
-            subkey: String::from("CLSID"),
+            hkey: HKEY_LOCAL_MACHINE, 
+            subkey: String::from("SOFTWARE\\Classes\\CLSID"),
             extra_subkeys: None,
             reg_conf: Vec::new(),
         };
@@ -152,9 +152,9 @@ pub struct TypeLibDef {
 impl TypeLibDef {
     pub fn new() ->  windows::core::Result<TypeLibDef> {
         let instance = TypeLibDef {
-            type_library: TypeLibInfo::new("C:\\System32\\NationalAccounts.tlb", "National Accounts", "National Accounts Type Library")?,
+            type_library: TypeLibInfo::new("C:\\NationalAccounts\\ntlAcc.tlb", "National Accounts", "National Accounts Type Library")?,
             interface: FInterface::new("INationalAccounts")?,
-            coclass: CoClassInt::new("NationalAccountsCoClass")?,
+            coclass: CoClassInt::new("NationalAccounts")?,
         };
         Ok(instance)
     }
@@ -165,8 +165,8 @@ pub fn registry_all() -> windows::core::Result<()> {
     // -------------------------------------------------------------------------------------------------------------------
     // COM Class Registry configurations
     tlb_data.coclass.extra_subkeys = Some(vec![
-        String::from("InprocServer32"), // Version
-        String::from("ProgID"), //LCID
+        String::from("InprocServer32"), 
+        String::from("ProgID"),
         String::from("TypeLib"),
         String::from("Version")
         ]
@@ -176,8 +176,8 @@ pub fn registry_all() -> windows::core::Result<()> {
             String::from("InprocServer32"), 
             None, 
             Some(REG_SZ), 
-            Some(Box::into_raw(Box::new(convert_to_pcwstr("C:\\System32\\NationalAccount\\nationalaccounts.dll"))) as *const c_void), 
-            0
+            Some(HSTRING::from("C:\\NationalAccounts\\ntlacc.dll\0").as_wide().as_ptr() as *const c_void), 
+            (HSTRING::from("C:\\System32\\NationalAccount\\nationalaccounts.dll\0").len() * 2) as u32
         )
     );
     tlb_data.coclass.reg_conf.push(
@@ -185,8 +185,8 @@ pub fn registry_all() -> windows::core::Result<()> {
             String::from("ProgID"), 
             None, 
             Some(REG_SZ), 
-            Some(Box::into_raw(Box::new(convert_to_pcwstr("NationalAccountCOM+"))) as *const c_void), 
-            0
+            Some(HSTRING::from("NationalAccountCOM+\0").as_wide().as_ptr() as *const c_void), 
+            (HSTRING::from("NationalAccountCOM+\0").len() * 2) as u32
         )
     );
     tlb_data.coclass.reg_conf.push(
@@ -194,8 +194,8 @@ pub fn registry_all() -> windows::core::Result<()> {
             String::from("TypeLib"), 
             None, 
             Some(REG_SZ), 
-            Some(tlb_data.type_library.iid as *const c_void), 
-            0
+            Some(HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).as_wide().as_ptr() as *const c_void), 
+            (HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).len() * 2) as u32
         )
     ); 
     tlb_data.coclass.reg_conf.push(
@@ -203,8 +203,8 @@ pub fn registry_all() -> windows::core::Result<()> {
             String::from("Version"), 
             None, 
             Some(REG_SZ), 
-            Some(Box::into_raw(Box::new("1.0")) as *const c_void),
-            0
+            Some(HSTRING::from("1.0\0").as_wide().as_ptr() as *const c_void),
+            (HSTRING::from("1.0\0").len() * 2) as u32
         )
     );  
 
@@ -212,23 +212,14 @@ pub fn registry_all() -> windows::core::Result<()> {
     let _ = set_registry_key_value(&tlb_data.coclass)?; 
 
     // ---------------------------------------------------------------------------------------------------------- 
-    // Interface Registry configurations
-    tlb_data.interface.reg_conf.push(
-        RegConfigs::add(
-            String::from("ProxyStubClsid32"), 
-            None, // Needs some value or unwrap will panic
-            Some(REG_SZ), 
-            Some(tlb_data.coclass.iid as *const c_void), // Encapsulate the GUID in culy brackets
-            0 // Change accordingly
-        )
-    );
+    // Interface Registry configurations // Need to try building a Typelibrary without defining an interface. It could be automatically created
     tlb_data.interface.reg_conf.push( 
         RegConfigs::add(
             String::from("TypeLib"), 
-            None, // Needs some value or unwrap will panic
+            None, 
             Some(REG_SZ), 
-            Some(tlb_data.type_library.iid as *const c_void), 
-            0 // Change accordingly
+            Some(HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).as_wide().as_ptr() as *const c_void), 
+            (HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).len() * 2) as u32
         )
     );
 

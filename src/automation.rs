@@ -13,7 +13,13 @@ pub mod excel_automation {
     use crate::regkeys::*;
 
     pub fn register_com_interfaces() -> Result<()> {
+        unsafe { 
+            CoInitializeEx(None, COINIT_APARTMENTTHREADED) 
+        }?;
         registry_all()?;
+        unsafe {
+            CoUninitialize()
+        };
         Ok(())
     }
 
