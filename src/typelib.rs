@@ -121,3 +121,14 @@ pub fn convert_to_pcwstr (string: &str) -> PCWSTR {
     let pcw_string: PCWSTR = PCWSTR::from_raw(string_vec.as_ptr());
     pcw_string
 }
+
+pub fn unregsiter_typelib(tl_data: &TypeLibDef) -> windows::core::Result<()> { 
+    let res = unsafe { UnRegisterTypeLib(tl_data.type_library.iid, 1, 0, 0, SYS_WIN32) };
+    if res.is_ok() {
+        let _res_un = res.unwrap();
+    } else {
+        let error_message: Error = res.unwrap_err();
+        println!("{}", error_message.to_string());
+    }
+    Ok(())
+}

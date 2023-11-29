@@ -152,7 +152,7 @@ pub struct TypeLibDef {
 impl TypeLibDef {
     pub fn new() ->  windows::core::Result<TypeLibDef> {
         let instance = TypeLibDef {
-            type_library: TypeLibInfo::new("C:\\NationalAccounts\\ntlAcc.tlb", "National Accounts", "National Accounts Type Library")?,
+            type_library: TypeLibInfo::new("C:\\NationalAccounts\\ntlacc.tlb", "National Accounts", "National Accounts Type Library")?,
             interface: FInterface::new("INationalAccounts")?,
             coclass: CoClassInt::new("NationalAccounts")?,
         };
@@ -163,7 +163,7 @@ impl TypeLibDef {
 pub fn registry_all() -> windows::core::Result<()> {
     let mut tlb_data = TypeLibDef::new()?;
     // -------------------------------------------------------------------------------------------------------------------
-    // COM Class Registry configurations
+    // COM Class Registry configurations     todo!("Create an APPID key for the COM CLASS");
     tlb_data.coclass.extra_subkeys = Some(vec![
         String::from("InprocServer32"), 
         String::from("ProgID"),
@@ -177,7 +177,7 @@ pub fn registry_all() -> windows::core::Result<()> {
             None, 
             Some(REG_SZ), 
             Some(HSTRING::from("C:\\NationalAccounts\\ntlacc.dll\0").as_wide().as_ptr() as *const c_void), 
-            (HSTRING::from("C:\\System32\\NationalAccount\\nationalaccounts.dll\0").len() * 2) as u32
+            (HSTRING::from("C:\\NationalAccount\\ntlacc.dll\0").len() * 2) as u32
         )
     );
     tlb_data.coclass.reg_conf.push(
@@ -212,20 +212,20 @@ pub fn registry_all() -> windows::core::Result<()> {
     let _ = set_registry_key_value(&tlb_data.coclass)?; 
 
     // ---------------------------------------------------------------------------------------------------------- 
-    // Interface Registry configurations // Need to try building a Typelibrary without defining an interface. It could be automatically created
-    tlb_data.interface.reg_conf.push( 
-        RegConfigs::add(
-            String::from("TypeLib"), 
-            None, 
-            Some(REG_SZ), 
-            Some(HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).as_wide().as_ptr() as *const c_void), 
-            (HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).len() * 2) as u32
-        )
-    );
+    // Interface Registry configurations. It is automatically created
+    // tlb_data.interface.reg_conf.push( 
+    //     RegConfigs::add(
+    //         String::from("AppID"), // I need AppID for the COCLASS
+    //         None, 
+    //         Some(REG_SZ), 
+    //         Some(HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).as_wide().as_ptr() as *const c_void), 
+    //         (HSTRING::from(format!("{{{:#?}}}\0", unsafe{*tlb_data.type_library.iid})).len() * 2) as u32
+    //     )
+    // );
 
-    let _ = create_registry_entry(&tlb_data.interface)?;
-    let _ = set_registry_key_value(&tlb_data.interface)?;
-    
+    // let _ = create_registry_entry(&tlb_data.interface)?;
+    // let _ = set_registry_key_value(&tlb_data.interface)?;
+
     //-------------------------------------------------------------------------------------------------------------------- 
     // Build and register the type library
     let _ = create_typelibrary(&tlb_data)?;
